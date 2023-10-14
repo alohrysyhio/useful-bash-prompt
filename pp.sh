@@ -4,7 +4,7 @@
 get_git_branch() {
     local branch=$(git branch --show-current 2>/dev/null)
     if [[ -n "$branch" ]]; then
-        echo "on $branch"
+        echo "$branch"
     fi
 }
 
@@ -47,17 +47,20 @@ set_prompt() {
     local in="┌ in"
     local at="└"
     local colon="\$ "
+    #Variables of git
+    local on=""
     local git_branch=""
     local git_status=""
     local changes=""
 
     if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        on="on"
         git_branch=$(get_git_branch)
         git_status=$(get_git_status)
         changes=$(get_unstaged_changes)$(get_staged_changes)
     fi
 
-    PS1="$in $current_dir $git_branch $git_status$changes\n$at $user_host $colon"
+    PS1="$in $current_dir $on $git_branch $git_status$changes\n$at $user_host $colon"
 }
 
 # Call the set_prompt function
