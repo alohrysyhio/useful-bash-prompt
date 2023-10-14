@@ -10,13 +10,34 @@ get_git_branch() {
 
 # Function to get the current git status
 get_git_status() {
-    if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        if [[ -z $(git status --porcelain 2>/dev/null) ]]; then
-            echo "✔" # Git repository is clean
-        else
-            echo "✘" # Git repository has uncommitted changes
-        fi
+    if [[ -z $(git status --porcelain 2>/dev/null) ]]; then
+        echo "✔" # Git repository is clean
+    else
+        echo "✘" # Git repository has uncommitted changes
     fi
+}
+
+# Function to get the number of staged changes in the current Git repository
+get_staged_changes() {
+    # Get the number of staged changes
+    local staged_changes=$(git diff --cached --numstat | wc -l)
+    # Check if there are staged changes
+    if [[ "$staged_changes" -gt 0 ]]; then
+        echo " $staged_changes:s"
+    fi
+
+}
+
+# Function to get the number of unstaged changes in the current Git repository
+get_unstaged_changes() {
+
+    # Get the number of unstaged changes
+    local unstaged_changes=$(git diff --numstat | wc -l)
+    # Check if there are unstaged changes
+    if [[ "$unstaged_changes" -gt 0 ]]; then
+        echo " $unstaged_changes:!s"
+    fi
+
 }
 
 # Function to set the prompt
@@ -26,10 +47,17 @@ set_prompt() {
     local in="┌ in"
     local at="└"
     local colon="\$ "
-    local git_branch=$(get_git_branch)
-    local git_status=$(get_git_status)
+    local git_branch=""
+    local git_status=""
+    local changes=""
 
-    PS1="$in $current_dir $git_branch $git_status\n$at $user_host $colon"
+    if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        git_branch=$(get_git_branch)
+        git_status=$(get_git_status)
+        changes=$(get_unstaged_changes)$(get_staged_changes)
+    fi
+
+    PS1="$in $current_dir $git_branch $git_status$changes\n$at $user_host $colon"
 }
 
 # Call the set_prompt function
